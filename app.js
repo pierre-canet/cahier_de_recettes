@@ -52,6 +52,14 @@ app.put("/api/stuff/:id", (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 });
 
+app.delete("/api/stuff/:id", (req, res, next) => {
+  Recipe.deleteOne({ _id: req.params.id })
+
+    .then(() => res.status(200).json({ message: "Objet supprimé !" }))
+
+    .catch((error) => res.status(400).json({ error }));
+});
+
 app.get("/api/stuff/:id", (req, res, next) => {
   Recipe.findOne({ _id: req.params.id })
 

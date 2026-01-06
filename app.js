@@ -1,30 +1,23 @@
 const express = require("express");
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const mongoose = require("mongoose");
+const Recipe = require("./models/recipe");
 const uri =
-  "mongodb+srv://pierrecanet_db_user:fjU1RFdbqljGO0LM@recipebook.dtoh6wu.mongodb.net/?appName=RecipeBook";
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
+  "mongodb+srv://pierrecanet_db_user:fjU1RFdbqljGO0LM@recipebook.dtoh6wu.mongodb.net/RecipeBook";
+const clientOptions = {
+  serverApi: { version: "1", strict: true, deprecationErrors: true },
+};
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
+    await mongoose.connect(uri, clientOptions);
+    await mongoose.connection.db.admin().command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    await mongoose.disconnect();
   }
 }
 run().catch(console.dir);
@@ -32,11 +25,18 @@ run().catch(console.dir);
 app.use(express.json());
 
 app.post("/api/stuff", (req, res, next) => {
-  console.log(req.body);
+  delete req.body._id;
 
-  res.status(201).json({
-    message: "Objet créé !",
+  const recipe = new Recipe({
+    ...req.body,
   });
+
+  recipe
+    .save()
+
+    .then(() => res.status(201).json({ message: "Objet enregistré !" }))
+
+    .catch((error) => res.status(400).json({ error }));
 });
 
 app.use((req, res, next) => {

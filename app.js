@@ -39,6 +39,14 @@ app.post("/api/stuff", (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 });
 
+app.get("/api/stuff/:id", (req, res, next) => {
+  Recipe.findOne({ _id: req.params.id })
+
+    .then((thing) => res.status(200).json(thing))
+
+    .catch((error) => res.status(404).json({ error }));
+});
+
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -55,40 +63,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/api/stuff", (req, res, next) => {
-  const stuff = [
-    {
-      _id: "oeihfzeoi",
+app.use("/api/stuff", (req, res, next) => {
+  Recipe.find()
 
-      title: "Mon premier objet",
+    .then((things) => res.status(200).json(things))
 
-      description: "Les infos de mon premier objet",
-
-      imageUrl:
-        "https://cdn.pixabay.com/photo/2019/06/11/18/56/camera-4267692_1280.jpg",
-
-      price: 4900,
-
-      userId: "qsomihvqios",
-    },
-
-    {
-      _id: "oeihfzeomoihi",
-
-      title: "Mon deuxième objet",
-
-      description: "Les infos de mon deuxième objet",
-
-      imageUrl:
-        "https://cdn.pixabay.com/photo/2019/06/11/18/56/camera-4267692_1280.jpg",
-
-      price: 2900,
-
-      userId: "qsomihvqios",
-    },
-  ];
-
-  res.status(200).json(stuff);
+    .catch((error) => res.status(400).json({ error }));
 });
 
 module.exports = app;

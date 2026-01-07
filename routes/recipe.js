@@ -1,44 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const Recipe = require("../models/recipe");
+const recipeCtrl = require("../controllers/recipe");
 
-router.post("/", (req, res, next) => {
-  const recipe = new Recipe({
-    title: req.body.title,
-    ingredients: req.body.ingredients,
-    steps: req.body.steps,
-    userId: req.body.userId,
-    date: req.body.date,
-  });
+router.post("/", recipeCtrl.createRecipe);
 
-  recipe
-    .save()
-    .then(() => res.status(201).json({ message: "Objet enregistré !" }))
-    .catch((error) => res.status(400).json({ error }));
-});
+router.get("/", recipeCtrl.getAllRecipes);
 
-router.get("/:id", (req, res, next) => {
-  Recipe.findOne({ _id: req.params.id })
-    .then((thing) => res.status(200).json(thing))
-    .catch((error) => res.status(404).json({ error }));
-});
+router.get("/:id", recipeCtrl.getOneRecipe);
 
-router.put("/:id", (req, res, next) => {
-  Recipe.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Objet modifié !" }))
-    .catch((error) => res.status(400).json({ error }));
-});
+router.put("/:id", recipeCtrl.modifyRecipe);
 
-router.delete("/:id", (req, res, next) => {
-  Recipe.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Objet supprimé !" }))
-    .catch((error) => res.status(400).json({ error }));
-});
-
-router.get("/", (req, res, next) => {
-  Recipe.find()
-    .then((things) => res.status(200).json(things))
-    .catch((error) => res.status(400).json({ error }));
-});
+router.delete("/:id", recipeCtrl.deleteRecipe);
 
 module.exports = router;

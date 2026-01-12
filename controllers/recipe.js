@@ -1,18 +1,22 @@
 const Recipe = require("../models/recipe");
 
 exports.createRecipe = (req, res, next) => {
+  const recipeObject = JSON.parse(req.body.recipe);
+  delete recipeObject._id;
+  delete recipeObject._userId;
   const recipe = new Recipe({
-    title: req.body.title,
-    ingredients: req.body.ingredients,
-    steps: req.body.steps,
-    userId: req.body.userId,
-    date: req.body.date,
+    ...recipeObject,
+    userId: req.auth.userId,
+    image: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
   });
-
   recipe
     .save()
-    .then(() => res.status(201).json({ message: "Objet enregistré !" }))
-    .catch((error) => res.status(400).json({ error }));
+    .then(() => {
+      res.status(201).json({ message: "Objet enregistré !" });
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
 };
 
 exports.getAllRecipes = (req, res, next) => {
@@ -28,9 +32,31 @@ exports.getOneRecipe = (req, res, next) => {
 };
 
 exports.modifyRecipe = (req, res, next) => {
-  Recipe.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Objet modifié !" }))
-    .catch((error) => res.status(400).json({ error }));
+  const recipeObject = req.file
+    ? {
+        ...JSON.parse(req.body.recipe),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+      }
+    : { ...req.body };
+  delete recipeObject._userId;
+  Recipe.findOne({ _id: req.params.id })
+    .then((recipe) => {
+      if (recipe.userId != req.auth.userId) {
+        res.status(401).json({ message: "Not authorized" });
+      } else {
+        Recipe.updateOne(
+          { _id: req.params.id },
+          { ...recipeObject, _id: req.params.id }
+        )
+          .then(() => res.status(200).json({ message: "Objet modifié!" }))
+          .catch((error) => res.status(401).json({ error }));
+      }
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
 };
 
 exports.deleteRecipe = (req, res, next) => {
